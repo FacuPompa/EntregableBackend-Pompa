@@ -1,10 +1,21 @@
 const express = require('express');
 const ProductManager = require('./ProductManager');
+const fs = require('fs');
 const app = express();
 
+// Configuración del puerto
+const port = 8080;
+
+// Middleware para el manejo de datos en formato JSON
+app.use(express.json());
+
+// Crear una instancia de ProductManager
 const productManager = new ProductManager('./productos.json');
 
-app.get('/products', (req, res) => {
+// Rutas para el manejo de productos
+
+// Listar todos los productos
+app.get('/api/products', (req, res) => {
   const products = productManager.getProducts();
   const limit = req.query.limit;
   if (limit) {
@@ -14,24 +25,35 @@ app.get('/products', (req, res) => {
   }
 });
 
-app.get('/products/:pid', (req, res) => {
+// Obtener un producto por su ID
+app.get('/api/products/:pid', (req, res) => {
   const productId = parseInt(req.params.pid);
   const product = productManager.getProductById(productId);
   res.json(product);
 });
 
-const newProduct = {
-  title: 'producto nuevo',
-  description: 'descripción del nuevo producto',
-  price: 2500,
-  thumbnail: 'imagendelobjeto.jpg',
-  code: 'NP1',
-  stock: 10,
-};
-
-const addedProduct = productManager.addProduct(newProduct);
-console.log('Producto agregado:', addedProduct);
-
-app.listen(3000, () => {
-  console.log('Server is listening on port 3000');
+// Agregar un nuevo producto
+app.post('/api/products', (req, res) => {
+  const newProduct = req.body;
+  const addedProduct = productManager.addProduct(newProduct);
+  res.json(addedProduct);
 });
+
+// Actualizar un producto por su ID
+app.put('/api/products/:pid', (req, res) => {
+  const productId = parseInt(req.params.pid);
+  const updatedProduct = req.body;
+  const product = productManager.updateProduct(productId, updatedProduct);
+  res.json(product);
+});
+
+// Eliminar un producto por su ID
+app.delete('/api/products/:pid', (req, res) => {
+  const productId = parseInt(req.params.pid);
+  productManager.deleteProduct(productId);
+  res.json({ message: 'Product deleted' });
+});
+
+// Rutas para el manejo de carritos
+
+const cartsRouter = express.Router();
