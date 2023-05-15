@@ -3,25 +3,36 @@ const fs = require('fs');
 class CartManager {
   constructor(filePath) {
     this.filePath = filePath;
-    this.carts = this.loadCarts();
-    this.cartIdCounter = this.getHighestCartId() + 1;
+    this.carts = [];
+    this.cartIdCounter = 0;
+    this.initialize();
+  }
+
+  // Método para inicializar el administrador de carritos
+  async initialize() {
+    try {
+      await this.loadCarts();
+      this.cartIdCounter = this.getHighestCartId() + 1;
+    } catch (err) {
+      console.log(`Error initializing cart manager: ${err}`);
+    }
   }
 
   // Método para cargar los carritos desde el archivo
-  loadCarts() {
+  async loadCarts() {
     try {
-      const data = fs.readFileSync(this.filePath, 'utf8');
-      return JSON.parse(data);
+      const data = await fs.promises.readFile(this.filePath, 'utf8');
+      this.carts = JSON.parse(data);
     } catch (err) {
       console.log(`Error loading cart file: ${err}`);
-      return [];
+      this.carts = [];
     }
   }
 
   // Método para guardar los carritos en el archivo
-  saveCarts() {
+  async saveCarts() {
     const data = JSON.stringify(this.carts);
-    fs.writeFileSync(this.filePath, data);
+    await fs.promises.writeFile(this.filePath, data);
   }
 
   // Método para obtener el carrito con el ID más alto

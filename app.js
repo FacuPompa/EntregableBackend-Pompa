@@ -1,5 +1,6 @@
 const express = require('express');
 const ProductManager = require('./ProductManager');
+const productRoutes = require('./productRoutes');
 const fs = require('fs');
 const app = express();
 
@@ -12,7 +13,8 @@ app.use(express.json());
 // Crear una instancia de ProductManager
 const productManager = new ProductManager('./productos.json');
 
-// Rutas para el manejo de productos
+// Registrar las rutas del enrutador de productos
+app.use('/api/products', productRoutes);
 
 // Listar todos los productos
 app.get('/api/products', (req, res) => {
@@ -57,3 +59,9 @@ app.delete('/api/products/:pid', (req, res) => {
 // Rutas para el manejo de carritos
 
 const cartsRouter = express.Router();
+
+app.listen(port, () => {
+
+  console.log(`Server is listening on port ${port}`);
+  
+  });
