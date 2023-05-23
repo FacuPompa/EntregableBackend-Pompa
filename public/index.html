@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Listao de productos</title>
+  </head>
+  <body>
+    <h1>Lista de productos en tiempo real</h1>
+    <ul id="product-list"></ul>
+    <form id="product-form">
+      <input type="text" name="title" placeholder="Nombre del producto" required>
+      <button type="submit">Agregar producto</button>
+    </form>
+      <script src="/socket.io/socket.io.js"></script>
+<script>
+  const socket = io();
+
+  // Manejar evento para agregar un nuevo producto
+  socket.on('newProduct', (product) => {
+    const productList = document.getElementById('product-list');
+    const newItem = document.createElement('li');
+    newItem.innerText = product.title;
+    productList.appendChild(newItem);
+  });
+
+  // Manejar evento para eliminar un producto
+  socket.on('deletedProduct', (product) => {
+    const productList = document.getElementById('product-list');
+    const items = productList.getElementsByTagName('li');
+
+    // Buscar y eliminar el elemento correspondiente al producto eliminado
+    for (let i = 0; i < items.length; i++) {
+      if (items[i].innerText === product.title) {
+        productList.removeChild(items[i]);
+        break;
+      }
+    }
+  });
+
+  // Manejar el envío del formulario para agregar un producto
+  const productForm = document.getElementById('product-form');
+  productForm.addEventListener('submit', (e) => {
+    e.preventDefault();
+    const titleInput = document.querySelector('input[name="title"]');
+    const title = titleInput.value;
+
+    // Enviar el nuevo producto al servidor a través del socket
+    socket.emit('addProduct', { title });
+
+    titleInput.value = '';
+  });
+    </script>
+  </body>
+</html>
