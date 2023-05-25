@@ -6,6 +6,7 @@ const app = express();
 const exphbs = require('express-handlebars');
 const http = require('http').createServer(app);
 const io = require('socket.io')(http);
+const path = require('path');
 
 
 
@@ -16,7 +17,7 @@ const port = 8080;
 app.use(express.json());
 
 // Configurar Handlebars como motor de plantillas
-app.engine('handlebars', exphbs());
+app.engine('handlebars', exphbs.engine());
 app.set('view engine', 'handlebars');
 
 // Configurar Socket.io
@@ -27,7 +28,7 @@ io.on('connection', (socket) => {
 
 
 // Crear una instancia de ProductManager
-const productManager = new ProductManager('./productos.json');
+const productManager = new ProductManager('./src/productos.json');
 
 // Registrar las rutas del enrutador de productos
 app.use('/api/products', productRoutes);
