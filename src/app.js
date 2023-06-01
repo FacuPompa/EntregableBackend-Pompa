@@ -19,11 +19,12 @@ app.use(express.json());
 // Configurar Handlebars como motor de plantillas
 app.engine('handlebars', exphbs.engine());
 app.set('view engine', 'handlebars');
+app.set("views", __dirname + "/views");
 
 // Configurar Socket.io
 io.on('connection', (socket) => {
   console.log('A user connected');
-  // Aquí puedes agregar la lógica para escuchar eventos de sockets
+
 });
 
 
@@ -35,7 +36,7 @@ app.use('/api/products', productRoutes);
 
 // Listar todos los productos
 app.get('/api/products', (req, res) => {
-  const products = productManager.getProducts();
+  const products = productManager.getProducts(); 
   const limit = req.query.limit;
   if (limit) {
     res.json(products.slice(0, limit));
