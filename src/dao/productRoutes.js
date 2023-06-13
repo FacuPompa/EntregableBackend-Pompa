@@ -1,14 +1,16 @@
 const express = require('express');
-const ProductManager = require('./ProductManager');
+const ProductManager = require('../dao/ProductManager');
+const { Product } = require('../dao/models/Product');
 
 const productsRouter = express.Router();
-const productManager = new ProductManager('./src/productos.json');
+const productManager = new ProductManager();
 
 // Obtener todos los productos
-productsRouter.get('/', (req, res) => {
+productsRouter.get('/', async (req, res) => {
   try {
     const { limit } = req.query;
-    let products = productManager.getProducts();
+
+    let products = await productManager.getProducts();
 
     if (limit) {
       products = products.slice(0, limit);
@@ -21,10 +23,10 @@ productsRouter.get('/', (req, res) => {
 });
 
 // Obtener un producto por ID
-productsRouter.get('/:pid', (req, res) => {
+productsRouter.get('/:pid', async (req, res) => {
   try {
     const { pid } = req.params;
-    const product = productManager.getProductById(pid);
+    const product = await productManager.getProductById(pid);
 
     if (product) {
       res.json(product);
@@ -37,7 +39,7 @@ productsRouter.get('/:pid', (req, res) => {
 });
 
 // Agregar un nuevo producto
-productsRouter.post('/', (req, res) => {
+productsRouter.post('/', async (req, res) => {
   try {
     const {
       title,
@@ -50,7 +52,7 @@ productsRouter.post('/', (req, res) => {
       thumbnails = []
     } = req.body;
 
-    const newProduct = {
+    const newProduct = new Product({
       title,
       description,
       code,
@@ -59,9 +61,9 @@ productsRouter.post('/', (req, res) => {
       stock,
       category,
       thumbnails
-    };
+    });
 
-    const product = productManager.addProduct(newProduct);
+    const product = await productManager.addProduct(newProduct);
 
     if (product) {
       res.json(product);
@@ -74,12 +76,12 @@ productsRouter.post('/', (req, res) => {
 });
 
 // Actualizar un producto
-productsRouter.put('/:pid', (req, res) => {
+productsRouter.put('/:pid', async (req, res) => {
   try {
     const { pid } = req.params;
     const updatedProduct = req.body;
 
-    const product = productManager.updateProduct(pid, updatedProduct);
+    const product = await productManager.updateProduct(pid, updatedProduct);
 
     if (product) {
       res.json(product);
@@ -92,10 +94,10 @@ productsRouter.put('/:pid', (req, res) => {
 });
 
 // Eliminar un producto
-productsRouter.delete('/:pid', (req, res) => {
+productsRouter.delete('/:pid', async (req, res) => {
   try {
     const { pid } = req.params;
-    const success = productManager.deleteProduct(pid);
+    const success = await productManager.deleteProduct(pid);
 
     if (success) {
       res.sendStatus(204);

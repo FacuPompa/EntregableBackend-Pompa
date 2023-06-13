@@ -1,11 +1,73 @@
 [
-{
-    "id":1,
-    "title":"producto nuevo",
-    "description":"descripción del nuevo producto",
-    "price":2500,"thumbnail":"imagendelobjeto.jpg",
-    "code":"NP1",
-    "stock":10
-    
+    {
+      "id": "",
+      "title": "One Piece #12",
+      "description": "Tomo número 12 de One Piece",
+      "price": 2000,
+      "thumbnail": "imagendelobjeto.jpg",
+      "stock": 10
+    },
+
+    {
+      "id": "",
+      "title": "Black Clover #7",
+      "description": "Tomo número 7 de Black Clover",
+      "price": 2000,
+      "thumbnail": "imagendelobjeto.jpg",
+      "stock": 8
+    },
+
+    {
+      "id": "",
+      "title": "Card Captor Sakura Deluxe #1",
+      "description": "Tomo número 1 de Card Captor Sakura edición deluxe",
+      "price": 4000,
+      "thumbnail": "imagendelobjeto.jpg",
+      "stock": 32
+    },
+
+    {
+      "id": "",
+      "title": "Slam Dunk #5",
+      "description": "Tomo número 5 de Slam Dunk",
+      "price": 4000,
+      "thumbnail": "imagendelobjeto.jpg",
+      "stock": 3
+    },
+
+    {
+      "id": "",
+      "title": "Soul Eater #1",
+      "description": "Tomo número 1 de Soul Eater",
+      "price": 3000,
+      "thumbnail": "imagendelobjeto.jpg",
+      "stock": 10
+    },
+
+    {
+      "id": "",
+      "title": "Monster #1",
+      "description": "Tomo número 1 de Monster",
+      "price": 5500,
+      "thumbnail": "imagendelobjeto.jpg",
+      "stock": 19
+    },
+
+    {
+      "id": "",
+      "title": "Ten Count #1",
+      "description": "Tomo número 1 de Ten Count",
+      "price": 2300,
+      "thumbnail": "imagendelobjeto.jpg",
+      "stock": 12
+    },
+
+    {
+      "id": "",
+      "title": "Oyasumi Punpun #5",
+      "description": "Tomo número 5 de Oyasumi Punpun",
+      "price": 2300,
+      "thumbnail": "imagendelobjeto.jpg",
+      "stock": 23
     }
-]
+]  

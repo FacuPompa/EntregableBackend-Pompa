@@ -1,10 +1,10 @@
 const fs = require('fs');
+const { v4: uuidv4 } = require('uuid');
 
 class ProductManager {
   constructor(filePath) {
     this.filePath = filePath;
     this.products = [];
-    this.productIdCounter = 0;
     this.initialize();
   }
 
@@ -12,7 +12,6 @@ class ProductManager {
   async initialize() {
     try {
       await this.loadProducts();
-      this.productIdCounter = this.getHighestProductId() + 1;
     } catch (err) {
       console.log(`Error initializing product manager: ${err}`);
     }
@@ -35,17 +34,6 @@ class ProductManager {
     await fs.promises.writeFile(this.filePath, data);
   }
 
-  // Método para obtener el producto con el ID más alto
-  getHighestProductId() {
-    let highestId = 0;
-    for (const product of this.products) {
-      if (product.id > highestId) {
-        highestId = product.id;
-      }
-    }
-    return highestId;
-  }
-
   // Obtener todos los productos
   getProducts() {
     return this.products;
@@ -59,7 +47,7 @@ class ProductManager {
   // Agregar un nuevo producto
   addProduct(newProduct) {
     const product = {
-      id: this.productIdCounter++,
+      id: uuidv4(), 
       ...newProduct,
     };
 
