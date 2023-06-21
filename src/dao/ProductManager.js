@@ -1,89 +1,73 @@
-const fs = require('fs');
 const { v4: uuidv4 } = require('uuid');
+const { Product } = require('./models/Product');
 
 class ProductManager {
-  constructor(filePath) {
-    this.filePath = filePath;
-    this.products = [];
+  // Constructor sin el parámetro filePath
+  constructor() {
     this.initialize();
   }
 
   // Método para inicializar el administrador de productos
   async initialize() {
     try {
-      await this.loadProducts();
+      // No es necesario cargar los productos desde un archivo
     } catch (err) {
       console.log(`Error initializing product manager: ${err}`);
     }
   }
 
-  // Método para cargar los productos desde el archivo
-  async loadProducts() {
-    try {
-      const data = await fs.promises.readFile(this.filePath, 'utf8');
-      this.products = JSON.parse(data);
-    } catch (err) {
-      console.log(`Error loading product file: ${err}`);
-      this.products = [];
-    }
-  }
-
-  // Método para guardar los productos en el archivo
-  async saveProducts() {
-    const data = JSON.stringify(this.products);
-    await fs.promises.writeFile(this.filePath, data);
-  }
-
   // Obtener todos los productos
-  getProducts() {
-    return this.products;
+  async getProducts() {
+    try {
+      const products = await Product.find();
+      return products;
+    } catch (error) {
+      throw new Error('Failed to fetch products');
+    }
   }
 
   // Obtener un producto por ID
-  getProductById(pid) {
-    return this.products.find((product) => product.id === pid);
+  async getProductById(pid) {
+    try {
+      const product = await Product.findById(pid);
+      return product;
+    } catch (error) {
+      throw new Error('Failed to fetch product');
+    }
   }
 
   // Agregar un nuevo producto
-  addProduct(newProduct) {
-    const product = {
-      id: uuidv4(), 
-      ...newProduct,
-    };
-
-    this.products.push(product);
-    this.saveProducts();
-
-    return product;
+  async addProduct(newProduct) {
+    try {
+      const product = new Product({
+        id: uuidv4(),
+        ...newProduct,
+      });
+      await product.save();
+      return product;
+    } catch (error) {
+      throw new Error('Failed to add product');
+    }
   }
 
   // Actualizar un producto
-  updateProduct(pid, updatedProduct) {
-    const index = this.products.findIndex((product) => product.id === pid);
-
-    if (index !== -1) {
-      this.products[index] = {
-        id: pid,
-        ...updatedProduct,
-      };
-      this.saveProducts();
-      return this.products[index];
+  async updateProduct(pid, updatedProduct) {
+    try {
+      const product = await Product.findByIdAndUpdate(pid, updatedProduct, { new: true });
+      return product;
+    } catch (error) {
+      throw new Error('Failed to update product');
     }
-
-    return null;
   }
 
   // Eliminar un producto
-  deleteProduct(pid) {
-    const index = this.products.findIndex((product) => product.id === pid);
-
-    if (index !== -1) {
-      this.products.splice(index, 1);
-      this.saveProducts();
-      return true;
+  async deleteProduct(pid) {
+    try {
+      const result = await Product.findByIdAndDelete(pid);
+      return result !== null;
+    } catch (error) {
+      throw new Error('Failed to delete product');
     }
-
-    return false;
   }
 }
 

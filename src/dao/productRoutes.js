@@ -1,26 +1,61 @@
 const express = require('express');
 const ProductManager = require('../dao/ProductManager');
 const { Product } = require('../dao/models/Product');
+const mongoose = require('mongoose');
+
 
 const productsRouter = express.Router();
-const productManager = new ProductManager(); 
+const productManager = new ProductManager(mongoose.connection);
+
 
 // Obtener todos los productos
 productsRouter.get('/', async (req, res) => {
   try {
-    const { limit } = req.query;
+    const { limit = 10, page = 1, sort, query } = req.query;
 
-    let products = await productManager.getProducts();
-
-    if (limit) {
-      products = products.slice(0, limit);
+    // Crear un objeto de filtros basado en los parámetros recibidos
+    const filters = {};
+    if (query) {
+      filters.category = query; // Filtrar por categoría
     }
 
-    res.json(products);
+    // Obtener el total de productos según los filtros
+    const totalProducts = await productManager.countProducts(filters);
+
+    // Calcular la cantidad total de páginas y la página actual
+    const totalPages = Math.ceil(totalProducts / limit);
+    const currentPage = parseInt(page);
+
+    // Calcular el índice de inicio y fin de los productos según la página actual
+    const startIndex = (currentPage - 1) * limit;
+    const endIndex = currentPage * limit;
+
+    // Obtener los productos según los filtros y opciones de ordenamiento
+    let products = await productManager.getProducts(filters, sort);
+
+    // Aplicar la paginación a los productos
+    const paginatedProducts = products.slice(startIndex, endIndex);
+
+    // Construir el objeto de respuesta
+    const response = {
+      status: 'success',
+      payload: paginatedProducts,
+      totalPages: totalPages,
+      prevPage: currentPage > 1 ? currentPage - 1 : null,
+      nextPage: currentPage < totalPages ? currentPage + 1 : null,
+      page: currentPage,
+      hasPrevPage: currentPage > 1,
+      hasNextPage: currentPage < totalPages,
+      prevLink: currentPage > 1 ? `/products?limit=${limit}&page=${currentPage - 1}&sort=${sort}&query=${query}` : null,
+      nextLink: currentPage < totalPages ? `/products?limit=${limit}&page=${currentPage + 1}&sort=${sort}&query=${query}` : null
+    };
+
+    res.json(response);
   } catch (error) {
     res.status(500).json({ error: 'Failed to fetch products' });
   }
 });
+
 
 // Obtener un producto por ID
 productsRouter.get('/:pid', async (req, res) => {

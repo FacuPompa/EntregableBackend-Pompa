@@ -10,18 +10,17 @@ const app = express();
 const http = require('http').createServer(app);
 const io = require('socket.io')(http);
 
-const port = 8080;
+const port = process.env.PORT || 8080;
 
-app.use(express.json());
-
+// Configuración del motor de plantillas
 app.engine('handlebars', exphbs.engine());
 app.set('view engine', 'handlebars');
 app.set('views', __dirname + '/views');
 
-io.on('connection', (socket) => {
-  console.log('A user connected');
-});
+// Middleware para el análisis del cuerpo de las solicitudes
+app.use(express.json());
 
+// Conexión a MongoDB
 mongoose
   .connect('mongodb://localhost:27017/Productos', {
     useNewUrlParser: true,
@@ -34,6 +33,7 @@ mongoose
     console.error('Error connecting to MongoDB:', error);
   });
 
+// Configuración de las rutas de productos
 app.use('/api/products', productRoutes);
 
 app.get('/api/products', (req, res) => {
