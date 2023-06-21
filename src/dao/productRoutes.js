@@ -3,7 +3,7 @@ const ProductManager = require('../dao/ProductManager');
 const { Product } = require('../dao/models/Product');
 
 const productsRouter = express.Router();
-const productManager = new ProductManager();
+const productManager = new ProductManager(); 
 
 // Obtener todos los productos
 productsRouter.get('/', async (req, res) => {
