@@ -1,10 +1,14 @@
 const express = require('express');
 const exphbs = require('express-handlebars');
 const mongoose = require('mongoose');
+const logInRoutes = require('./dao/logInRoutes');
 const productRoutes = require('./dao/productRoutes');
+const LogIn = require('./dao/LogIn');
 const Product = require('./dao/models/Product');
 const Cart = require('./dao/models/Cart');
 const Message = require('./dao/models/Message');
+const session = require('express-session');
+const crypto = require('crypto');
 
 const app = express();
 const http = require('http').createServer(app);
@@ -20,6 +24,14 @@ app.set('views', __dirname + '/views');
 // Middleware para el análisis del cuerpo de las solicitudes
 app.use(express.json());
 
+// Configuración de CORS
+app.use((req, res, next) => {
+  res.setHeader('Access-Control-Allow-Origin', '*');
+  res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE');
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
+  next();
+});
+
 // Conexión a MongoDB
 mongoose
   .connect('mongodb://localhost:27017/Productos', {
@@ -33,8 +45,23 @@ mongoose
     console.error('Error connecting to MongoDB:', error);
   });
 
-// Configuración de las rutas de productos
+
+
+// Ruta de productos
 app.use('/api/products', productRoutes);
+
+// Rutas para login
+
+process.setMaxListeners(0);
+
+
+app.use('/', logInRoutes);
+
+app.use(session({
+  secret: 'secret',
+  resave: true,
+  saveUninitialized: true
+}));
 
 app.get('/api/products', (req, res) => {
   const limit = req.query.limit;
@@ -108,10 +135,9 @@ app.put('/api/products/:pid', (req, res) => {
 
 app.delete('/api/products/:pid', (req, res) => {
   const productId = req.params.pid;
-  Product.findByIdAndDelete(productId)
-    .then((deletedProduct) => {
-      if (deletedProduct) {
-        io.emit('deletedProduct', deletedProduct);
+  Product.findByIdAndRemove(productId)
+    .then((product) => {
+      if (product) {
         res.json({ message: 'Product deleted' });
       } else {
         res.status(404).json({ error: 'Product not found' });
@@ -123,37 +149,16 @@ app.delete('/api/products/:pid', (req, res) => {
     });
 });
 
-// Rutas para el manejo de carritos
-const cartsRouter = express.Router();
+// Configuración de Socket.IO
+io.on('connection', (socket) => {
+  console.log('A user connected');
 
-app.listen(port, () => {
-  console.log(`Server is listening on port ${port}`);
+  socket.on('disconnect', () => {
+    console.log('A user disconnected');
+  });
 });
 
-app.get('/realtimeproducts', (req, res) => {
-  Product.find()
-    .then((products) => {
-      res.render('realTimeProducts', { products });
-    })
-    .catch((error) => {
-      console.error('Error retrieving products:', error);
-      res.status(500).json({ error: 'Failed to retrieve products' });
-    });
-});
-
-app.delete('/api/products/:pid', (req, res) => {
-  const productId = req.params.pid;
-  Product.findByIdAndDelete(productId)
-    .then((deletedProduct) => {
-      if (deletedProduct) {
-        io.emit('deletedProduct', deletedProduct);
-        res.json({ message: 'Product deleted' });
-      } else {
-        res.status(404).json({ error: 'Product not found' });
-      }
-    })
-    .catch((error) => {
-      console.error('Error deleting product:', error);
-      res.status(500).json({ error: 'Failed to delete product' });
-    });
+// Inicialización del servidor
+http.listen(port, () => {
+  console.log(`Server running on port ${port}`);
 });
