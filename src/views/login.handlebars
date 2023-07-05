@@ -5,9 +5,15 @@
   <title>Login</title>
 </head>
 <body>
-  <h1>Login</h1>
+  <h1>Inicio de sesión</h1>
+  {{#if error}}
+    <p>{{error}}</p>
+  {{/if}}
+  {{#if message}}
+    <p>{{message}}</p>
+  {{/if}}
   <form action="/login" method="POST">
-      <label for="email">Correo electrónico:</label>
+    <label for="email">Correo electrónico:</label>
     <input type="text" id="email" name="email" required>
     <br>
     <label for="username">Nombre de usuario:</label>
@@ -16,7 +22,10 @@
     <label for="password">Contraseña:</label>
     <input type="password" id="password" name="password" required>
     <br>
-    <input type="submit" value="Login">
+    <br>
+    <input type="submit" value="Iniciar sesión">
   </form>
+  <br>
+  <a href="/register">No tengo cuenta</a>
 </body>
 </html>

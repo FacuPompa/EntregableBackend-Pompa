@@ -3,7 +3,9 @@ const exphbs = require('express-handlebars');
 const mongoose = require('mongoose');
 const logInRoutes = require('./dao/logInRoutes');
 const productRoutes = require('./dao/productRoutes');
+const registerRoutes = require('./dao/registerRoutes');
 const LogIn = require('./dao/LogIn');
+const User = require('./dao/models/User');
 const Product = require('./dao/models/Product');
 const Cart = require('./dao/models/Cart');
 const Message = require('./dao/models/Message');
@@ -45,17 +47,12 @@ mongoose
     console.error('Error connecting to MongoDB:', error);
   });
 
-
-
 // Ruta de productos
 app.use('/api/products', productRoutes);
 
 // Rutas para login
-
-process.setMaxListeners(0);
-
-
 app.use('/', logInRoutes);
+app.use('/', registerRoutes);
 
 app.use(session({
   secret: 'secret',

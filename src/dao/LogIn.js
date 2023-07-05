@@ -15,7 +15,7 @@ const LogIn = {
 
       // Verificar si el usuario existe
       if (!user) {
-        return res.redirect('/login');
+        return res.render('login', { error: 'Usuario no registrado' });
       }
 
       // Verificar la contraseña utilizando SHA-256
@@ -24,23 +24,11 @@ const LogIn = {
       if (user.password === hashedPassword) {
         // Inicio de sesión exitoso
 
-        // Verificar el rol del usuario
-        if (user.role === 'admin') {
-          // Redirigir al usuario administrador a la página de administración
-          return res.redirect('/admin');
-        }
-
-        // Guardar los datos de sesión en req.session
-        req.session.user = {
-          id: user._id,
-          name: user.name,
-          email: user.email,
-          role: user.role,
-        };
-
-        return res.redirect('/products');
+        // Mostrar alerta de bienvenida con el nombre de usuario
+        const welcomeMessage = `Bienvenido, ${user.name}!`;
+        return res.render('login', { message: welcomeMessage });
       } else {
-        return res.redirect('/login');
+        return res.render('login', { error: 'Contraseña incorrecta' });
       }
     } catch (error) {
       console.error('Error processing login:', error);
@@ -54,7 +42,7 @@ const LogIn = {
     try {
       const existingUser = await User.findOne({ email });
       if (existingUser) {
-        return res.redirect('/register');
+        return res.render('register', { error: 'El usuario ya está registrado' });
       }
   
       // Cifrar la contraseña utilizando SHA-256
@@ -69,12 +57,15 @@ const LogIn = {
   
       await newUser.save();
   
-      return res.redirect('/login'); // Redireccionar al formulario de inicio de sesión
+      // Mostrar mensaje de éxito
+      const successMessage = 'Usuario registrado correctamente';
+      return res.render('login', { message: successMessage });
     } catch (error) {
       console.error('Error processing registration:', error);
       res.redirect('/register');
     }
   },
+  
 
 
   logout(req, res) {
@@ -89,4 +80,3 @@ const LogIn = {
 };
 
 module.exports = LogIn;
-
