@@ -11,6 +11,9 @@ const Cart = require('./dao/models/Cart');
 const Message = require('./dao/models/Message');
 const session = require('express-session');
 const crypto = require('crypto');
+const passport = require('passport');
+const LocalStrategy = require('passport-local').Strategy;
+const bcrypt = require('bcrypt');
 
 const app = express();
 const http = require('http').createServer(app);
@@ -47,6 +50,46 @@ mongoose
     console.error('Error connecting to MongoDB:', error);
   });
 
+// Configuración de Passport
+passport.use(
+  new LocalStrategy(
+    {
+      usernameField: 'email',
+      passwordField: 'password',
+    },
+    async (email, password, done) => {
+      try {
+        const user = await User.findOne({ email });
+        if (!user) {
+          return done(null, false, { message: 'Usuario no registrado' });
+        }
+
+        const passwordMatch = await bcrypt.compare(password, user.password);
+        if (!passwordMatch) {
+          return done(null, false, { message: 'Contraseña incorrecta' });
+        }
+
+        return done(null, user);
+      } catch (error) {
+        return done(error);
+      }
+    }
+  )
+);
+
+passport.serializeUser((user, done) => {
+  done(null, user.id);
+});
+
+passport.deserializeUser(async (id, done) => {
+  try {
+    const user = await User.findById(id);
+    done(null, user);
+  } catch (error) {
+    done(error);
+  }
+});
+
 // Ruta de productos
 app.use('/api/products', productRoutes);
 
@@ -54,11 +97,17 @@ app.use('/api/products', productRoutes);
 app.use('/', logInRoutes);
 app.use('/', registerRoutes);
 
-app.use(session({
-  secret: 'secret',
-  resave: true,
-  saveUninitialized: true
-}));
+app.use(
+  session({
+    secret: 'secret',
+    resave: true,
+    saveUninitialized: true,
+  })
+);
+
+// Inicializar Passport
+app.use(passport.initialize());
+app.use(passport.session());
 
 app.get('/api/products', (req, res) => {
   const limit = req.query.limit;

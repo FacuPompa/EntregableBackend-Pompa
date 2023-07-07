@@ -1,81 +1,102 @@
 const crypto = require('crypto');
 const User = require('./models/User');
+const passport = require('passport');
+const LocalStrategy = require('passport-local').Strategy;
+const bcrypt = require('bcrypt');
+
+passport.use(
+  new LocalStrategy(
+    {
+      usernameField: 'email',
+      passwordField: 'password',
+    },
+    async (email, password, done) => {
+      try {
+        const user = await User.findOne({ email });
+        if (!user) {
+          return done(null, false, { message: 'Usuario no registrado' });
+        }
+
+        const passwordMatch = await bcrypt.compare(password, user.password);
+        if (!passwordMatch) {
+          return done(null, false, { message: 'Contraseña incorrecta' });
+        }
+
+        return done(null, user);
+      } catch (error) {
+        return done(error);
+      }
+    }
+  )
+);
+
+passport.serializeUser((user, done) => {
+  done(null, user.id);
+});
+
+passport.deserializeUser(async (id, done) => {
+  try {
+    const user = await User.findById(id);
+    done(null, user);
+  } catch (error) {
+    done(error);
+  }
+});
 
 const LogIn = {
   showLogin(req, res) {
     res.render('login');
   },
 
-  async processLogin(req, res) {
-    const { email, password } = req.body;
-
-    try {
-      // Buscar el usuario por su correo electrónico
-      const user = await User.findOne({ email });
-
-      // Verificar si el usuario existe
-      if (!user) {
-        return res.render('login', { error: 'Usuario no registrado' });
-      }
-
-      // Verificar la contraseña utilizando SHA-256
-      const hashedPassword = crypto.createHash('sha256').update(password).digest('hex');
-
-      if (user.password === hashedPassword) {
-        // Inicio de sesión exitoso
-
-        // Mostrar alerta de bienvenida con el nombre de usuario
-        const welcomeMessage = `Bienvenido, ${user.name}!`;
-        return res.render('login', { message: welcomeMessage });
-      } else {
-        return res.render('login', { error: 'Contraseña incorrecta' });
-      }
-    } catch (error) {
-      console.error('Error processing login:', error);
-      res.redirect('/login');
-    }
+  processLogin(req, res, next) {
+    passport.authenticate('local', {
+      successRedirect: '/success',
+      failureRedirect: '/login',
+    })(req, res, next);
   },
 
-  async processRegister(req, res) {
+  processRegister(req, res, next) {
     const { name, email, password } = req.body;
-  
-    try {
-      const existingUser = await User.findOne({ email });
-      if (existingUser) {
-        return res.render('register', { error: 'El usuario ya está registrado' });
-      }
-  
-      // Cifrar la contraseña utilizando SHA-256
-      const hashedPassword = crypto.createHash('sha256').update(password).digest('hex');
-  
-      // Crear un nuevo usuario
-      const newUser = new User({
-        name,
-        email,
-        password: hashedPassword,
-      });
-  
-      await newUser.save();
-  
-      // Mostrar mensaje de éxito
-      const successMessage = 'Usuario registrado correctamente';
-      return res.render('login', { message: successMessage });
-    } catch (error) {
-      console.error('Error processing registration:', error);
-      res.redirect('/register');
-    }
-  },
-  
 
+    User.findOne({ email })
+      .then((existingUser) => {
+        if (existingUser) {
+          return res.render('register', { error: 'El usuario ya está registrado' });
+        }
+
+        bcrypt
+          .hash(password, 10)
+          .then((hashedPassword) => {
+            const newUser = new User({
+              name,
+              email,
+              password: hashedPassword,
+            });
+
+            newUser
+              .save()
+              .then(() => {
+                res.render('login', { message: 'Usuario registrado correctamente' });
+              })
+              .catch((error) => {
+                console.error('Error saving user:', error);
+                res.redirect('/register');
+              });
+          })
+          .catch((error) => {
+            console.error('Error hashing password:', error);
+            res.redirect('/register');
+          });
+      })
+      .catch((error) => {
+        console.error('Error finding user:', error);
+        res.redirect('/register');
+      });
+  },
 
   logout(req, res) {
-    // Cerrar sesión y redirigir al formulario de inicio de sesión
-    req.session.destroy((err) => {
-      if (err) {
-        console.error('Error logging out:', err);
-      }
-      res.redirect('/login');
-    });
+    req.logout();
+    res.redirect('/login');
   },
 };
 

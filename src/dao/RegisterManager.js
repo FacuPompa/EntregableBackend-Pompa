@@ -1,3 +1,4 @@
+const bcrypt = require('bcrypt');
 const User = require('./models/User');
 
 const RegisterManager = {
@@ -14,16 +15,20 @@ const RegisterManager = {
         return res.render('register', { error: 'El correo electrónico ya está registrado' });
       }
   
+      // Cifrar la contraseña utilizando Bcrypt
+      const salt = await bcrypt.genSalt(10);
+      const hashedPassword = await bcrypt.hash(password, salt);
+  
       // Crear un nuevo usuario
       const newUser = new User({
         name,
         email,
-        password,
+        password: hashedPassword,
       });
   
       await newUser.save();
   
-      return res.redirect('/login'); // Redireccionar al formulario de inicio de sesión
+      return res.redirect('/login');
     } catch (error) {
       console.error('Error processing registration:', error);
       res.redirect('/register');
