@@ -14,6 +14,9 @@ const crypto = require('crypto');
 const passport = require('passport');
 const LocalStrategy = require('passport-local').Strategy;
 const bcrypt = require('bcrypt');
+const githubRoutes = require('./dao/githubRoutes');
+const { ensureAuthenticated } = require('./middleware/auth');
+const GitHubStrategy = require('passport-github').Strategy;
 
 const app = express();
 const http = require('http').createServer(app);
@@ -90,12 +93,46 @@ passport.deserializeUser(async (id, done) => {
   }
 });
 
-// Ruta de productos
+// RUTAS
 app.use('/api/products', productRoutes);
-
-// Rutas para login
 app.use('/', logInRoutes);
 app.use('/', registerRoutes);
+app.use('/', githubRoutes);
+app.get('/auth/github', passport.authenticate('github'));
+
+app.get(
+  '/auth/github/callback',
+  passport.authenticate('github', { failureRedirect: '/login' }),
+  (req, res) => {
+    res.redirect('/dashboard');
+  }
+);
+app.get('/api/sessions/githubcallback', passport.authenticate('github', { failureRedirect: '/login' }), (req, res) => {
+  
+  res.redirect('/dashboard'); 
+});
+
+app.get('/', ensureAuthenticated, (req, res) => {
+  Product.find()
+    .then((products) => {
+      res.render('index', { products });
+    })
+    .catch((error) => {
+      console.error('Error retrieving products:', error);
+      res.status(500).json({ error: 'Failed to retrieve products' });
+    });
+});
+
+app.get('/', (req, res) => {
+  Product.find()
+    .then((products) => {
+res.render('index', { products });
+    })
+    .catch((error) => {
+      console.error('Error retrieving products:', error);
+      res.status(500).json({ error: 'Failed to retrieve products' });
+    });
+});
 
 app.use(
   session({
@@ -104,6 +141,8 @@ app.use(
     saveUninitialized: true,
   })
 );
+
+
 
 // Inicializar Passport
 app.use(passport.initialize());
